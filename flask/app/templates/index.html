@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTTP daemon example</title>
+</head>
+<body>
+    <h3>Upload file</h3>
+    <form method=post enctype=multipart/form-data action="/upload">
+          <input type=file name=file>
+          <input type=submit value=Upload>
+    </form>
+    <br>
+    <form method=post action="/download">
+      <input type=text name=hash placeholder="Put file hash here">
+      <input type=submit value=Download>
+    </form>
+
+    <h3>File list</h3>
+    {% for file in files %}
+    <div>{{ file.hash }}</b></div>
+    {% endfor %}
+</body>
+</html>
