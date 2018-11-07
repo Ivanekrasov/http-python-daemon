@@ -2,30 +2,21 @@ from collections import namedtuple
 
 import os
 import shutil
-import hashlib
-from flask import Flask, url_for, render_template, request, redirect, send_file, make_response, abort
-
-
-UPLOAD_FOLDER = 'store'
-
-app = Flask(__name__)
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-File = namedtuple('File', 'name hash')
-files = []
-
-
+from flask import url_for, render_template, request, redirect, send_file, make_response, abort, flash
+from config import app, File
+from hash_file import hash_file
+# import hashlib
 # ----------- remove in prod
+
+
+# File = namedtuple('File', 'name hash')
+# files = []
+
+
+
 if not os.path.exists(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'])):
     os.makedirs(os.path.join(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'])))
 # -----------
-
-
-def hash_filename(filename):
-    hashed_filename = hashlib.sha224(filename.encode('utf-8')).hexdigest()
-    files.append(File(filename, hashed_filename))
-    return hashed_filename
 
 
 @app.route('/', methods=['GET'])
@@ -35,18 +26,18 @@ def page():
 
 @app.route('/main', methods=['GET'])
 def main():
-    return render_template('home.html', files=files)
+    return render_template('home.html', files=File.query.all())
 
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
         try:
-            file = request.files['file']
-        except KeyError:
-            return abort(404, "Empty request")
+            file = request.files["file"]
+        except KeyError as e:
+            return e, 404
 
-        hash = hash_filename(file.filename)
+        hash = hash_file(file)
         path_name = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], hash[0:2])
         if not os.path.exists(path_name):
             os.makedirs(path_name)
