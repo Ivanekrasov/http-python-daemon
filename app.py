@@ -1,19 +1,12 @@
-from collections import namedtuple
-
 import os
-import shutil
-from flask import url_for, render_template, request, redirect, send_file, make_response, abort, flash
-from config import app, db, File
+from methods import FilesDAO
+from flask import url_for, render_template, request, redirect, send_file, make_response, abort
+from flask_restplus import Resource
+from config import app, db, File, ns, files_api
 from hash_file import hash_file
-# import hashlib
+import shutil
+
 # ----------- remove in prod
-
-
-# File = namedtuple('File', 'name hash')
-# files = []
-
-
-
 if not os.path.exists(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'])):
     os.makedirs(os.path.join(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'])))
 # -----------
@@ -21,7 +14,8 @@ if not os.path.exists(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'])):
 
 @app.route('/', methods=['GET'])
 def page():
-    return redirect(url_for('main'))
+    # return redirect(url_for('main'))
+    return render_template('root.html')
 
 
 @app.route('/main', methods=['GET'])
@@ -79,7 +73,6 @@ def delete():
         return abort(404, "Empty request")
 
     if File.query.filter_by(hash=file_hash).first():
-        # fN = File.query.filter_by(hash=file_hash).one().filename
         record_to_delete = File.query.filter_by(hash=file_hash).one()
         db.session.delete(record_to_delete)
         db.session.commit()
@@ -89,4 +82,35 @@ def delete():
     else:
         abort(404, "File not found")
 
+
+# ============ API doc ===============
+DAO = FilesDAO()
+
+@ns.route('/')
+class FileList(Resource):
+    @ns.doc('list_files')
+    @ns.marshal_list_with(files_api)
+    def get(self):
+        return DAO.files
+
+
+@ns.route('/<int:id>')
+@ns.response(404, 'Todo not found')
+@ns.param('id', 'The file identifier')
+class FileRes(Resource):
+    @ns.doc('get_file')
+    @ns.marshal_with(files_api)
+    def get(self, filename):
+        return DAO.get(filename)
+
+    @ns.doc('delete_file')
+    @ns.response(204, 'File deleted')
+    def delete(self, file_hash):
+        DAO.delete(file_hash)
+        return '', 204
+
+    @ns.expect(files_api)
+    @ns.marshal_with(files_api)
+    def put(self, filename, file_hash):
+        return DAO.update(filename, file_hash)
 

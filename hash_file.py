@@ -1,6 +1,5 @@
 import hashlib
 from config import db, File
-# dev kostyl
 
 
 def hash_file(filename):
