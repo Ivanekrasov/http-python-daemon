@@ -3,7 +3,7 @@ from collections import namedtuple
 import os
 import shutil
 from flask import url_for, render_template, request, redirect, send_file, make_response, abort, flash
-from config import app, File
+from config import app, db, File
 from hash_file import hash_file
 # import hashlib
 # ----------- remove in prod
@@ -37,6 +37,9 @@ def upload():
         except KeyError as e:
             return e, 404
 
+        if File.query.filter_by(filename=file.filename).first():
+            abort(404, "File with name {filename} already exists".format(filename=file.filename))
+
         hash = hash_file(file)
         path_name = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], hash[0:2])
         if not os.path.exists(path_name):
@@ -56,14 +59,14 @@ def upload():
 @app.route('/download', methods=['POST'])
 def download():
     try:
-        hash = request.form['hash']
+        file_hash = request.form['hash']
     except KeyError:
         return abort(404, "Empty request")
 
-    if [file.hash == hash for file in files]:
-        filename = [file.name for file in files if file.hash == hash][0]
-        file_path = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], hash[0:2])
-        return send_file(os.path.join(file_path, hash),  attachment_filename=filename, as_attachment=True)
+    if File.query.filter_by(hash=file_hash).first():
+        filename = File.query.filter_by(hash=file_hash).first().filename
+        file_path = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], file_hash[0:2])
+        return send_file(os.path.join(file_path, file_hash),  attachment_filename=filename, as_attachment=True)
     else:
         abort(404, "File not found")
 
@@ -71,14 +74,17 @@ def download():
 @app.route('/delete', methods=['POST'])
 def delete():
     try:
-        hash = request.form['hash']
+        file_hash = request.form['hash']
     except KeyError:
         return abort(404, "Empty request")
 
-    if [file.hash == hash for file in files]:
-        file_path = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], hash[0:2])
+    if File.query.filter_by(hash=file_hash).first():
+        # fN = File.query.filter_by(hash=file_hash).one().filename
+        record_to_delete = File.query.filter_by(hash=file_hash).one()
+        db.session.delete(record_to_delete)
+        db.session.commit()
+        file_path = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], file_hash[0:2])
         shutil.rmtree(file_path)
-        files.remove([file for file in files if file.hash == hash][0])
         return redirect(url_for('main'))
     else:
         abort(404, "File not found")

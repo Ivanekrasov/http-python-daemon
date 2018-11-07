@@ -18,9 +18,8 @@ class File(db.Model):
     hash = db.Column(db.String, unique=True, nullable=False)
 
 
-db_file = File()
 # db.create_all()
-# db.session.add(db_file(filename='somefilename', hash='somehash'))
-# db.session.add(db_file(filename='somefilename', hash='somehash1'))
-# db.session.add(db_file(filename='somefilename1', hash='somehash2'))
+# db.session.add(File(filename='somefilename', hash='somehash'))
+# db.session.add(File(filename='somefilename', hash='somehash1'))
+# db.session.add(File(filename='somefilename1', hash='somehash2'))
 # db.session.commit()
