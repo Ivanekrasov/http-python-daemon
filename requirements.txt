@@ -9,7 +9,7 @@ Click==7.0
 clickclick==1.2.2
 conda==4.5.11
 connexion==2018.0.dev1
-cryptography==2.3.1
+cryptography==3.2
 cycler==0.10.0
 Cython==0.29
 Flask==1.0.2
