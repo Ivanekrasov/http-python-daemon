@@ -28,7 +28,7 @@ matplotlib==2.2.2
 mccabe==0.6.1
 mkl-fft==1.0.0
 mkl-random==1.0.1
-numpy==1.14.2
+numpy==1.22.0
 pycosat==0.6.3
 pycparser==2.19
 pylint==1.9.1
